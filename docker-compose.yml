@@ -1,0 +1,19 @@
+# Fixed project name keeps the data volume stable regardless of the folder name.
+name: data-collector
+
+services:
+  data-collector:
+    build: .
+    container_name: data-collector
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      TZ: Europe/Bratislava
+      # Optional HTTP basic auth, e.g. "zber:tajneheslo". Empty = no login.
+      BASIC_AUTH: ${BASIC_AUTH:-}
+    volumes:
+      - data-collector-data:/data
+
+volumes:
+  data-collector-data:
