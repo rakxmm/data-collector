@@ -47,14 +47,35 @@ function next_position(string $type): int
     return query('SELECT COALESCE(MAX(position), -1) + 1 FROM steps WHERE type = ?', [$type])->fetchColumn();
 }
 
-function add_step(string $type, string $name): void
+function add_step(string $type, string $name, string $options = ''): void
 {
-    query('INSERT INTO steps (type, name, position) VALUES (?, ?, ?)', [$type, $name, next_position($type)]);
+    query(
+        'INSERT INTO steps (type, name, position, options) VALUES (?, ?, ?, ?)',
+        [$type, $name, next_position($type), clean_options($options)]
+    );
 }
 
 function rename_step(int $id, string $name): void
 {
     query('UPDATE steps SET name = ? WHERE id = ?', [$name, $id]);
+}
+
+function set_step_options(int $id, string $options): void
+{
+    query('UPDATE steps SET options = ? WHERE id = ?', [clean_options($options), $id]);
+}
+
+// " objednaný,neobjednaný , " -> "objednaný, neobjednaný"
+function clean_options(string $options): string
+{
+    return implode(', ', question_options(['options' => $options]));
+}
+
+// Choices of a question, [] means a yes/no question. Answers store the position of the choice (1, 2, …).
+function question_options(array $question): array
+{
+    $options = array_map('trim', explode(',', $question['options']));
+    return array_values(array_filter($options, fn($option) => $option !== ''));
 }
 
 // $direction: -1 = up, 1 = down

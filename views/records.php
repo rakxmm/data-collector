@@ -111,6 +111,9 @@ require __DIR__ . '/header.php';
                         <?php else: ?>
                             <span class="muted"><?= _t('Records.NO_LABEL', 'bez označenia') ?></span>
                         <?php endif ?>
+                        <?php if ($customer['single_phase_id']): ?>
+                            <span class="badge badge-info"><?= _t('Records.SINGLE_PHASE', 'len fáza') ?></span>
+                        <?php endif ?>
                         <?php if ($customer['status'] === 'lost'): ?>
                             <span class="badge badge-warn" title="<?= e(_t('Records.LOST_HINT', 'Stratený z dohľadu, bez času odchodu')) ?>">
                                 <?= _t('Records.LOST', 'nedokončený') ?>
@@ -144,7 +147,7 @@ require __DIR__ . '/header.php';
                     <td class="n total" data-label="<?= e(_t('Records.TOTAL', 'Celkom')) ?>"><?= format_duration($row['total']) ?></td>
 
                     <?php foreach ($questions as $question): ?>
-                        <?php $answer = answer_label($row['answers'][$question['id']] ?? null); ?>
+                        <?php $answer = answer_label($question, $row['answers'][$question['id']] ?? null); ?>
                         <td class="<?= $answer === '' ? 'no-data' : '' ?>" data-label="<?= e($question['name']) ?>"><?= $answer ?: '–' ?></td>
                     <?php endforeach ?>
 

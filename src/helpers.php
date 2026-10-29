@@ -27,6 +27,18 @@ function only_mine(): bool
     return ($_COOKIE['only_mine'] ?? '') === '1';
 }
 
+// The phase chosen for measuring alone on this device, null = the whole visit.
+function single_phase(): ?array
+{
+    $id = (int) ($_COOKIE['single_phase'] ?? 0);
+    foreach (get_phases() as $phase) {
+        if ($phase['id'] === $id) {
+            return $phase;
+        }
+    }
+    return null;
+}
+
 // ?day=YYYY-MM-DD from the URL, '' means all days.
 function requested_day(): string
 {
@@ -77,13 +89,19 @@ function day_of(float $timestamp): string
     return date('Y-m-d', (int) $timestamp);
 }
 
-function answer_label(?int $value): string
+// "áno" / "nie", or the chosen option for a question with choices.
+function answer_label(array $question, ?int $value): string
 {
-    return match ($value) {
-        1 => _t('Common.YES_LOWER', 'áno'),
-        0 => _t('Common.NO_LOWER', 'nie'),
-        default => '',
-    };
+    if ($value === null) {
+        return '';
+    }
+
+    $options = question_options($question);
+    if ($options) {
+        return $options[$value - 1] ?? '';
+    }
+
+    return $value === 1 ? _t('Common.YES_LOWER', 'áno') : _t('Common.NO_LOWER', 'nie');
 }
 
 function average(array $values): ?float

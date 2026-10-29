@@ -6,7 +6,7 @@ require __DIR__ . '/../src/bootstrap.php';
 $action = $_POST['action'] ?? '';
 
 if ($action === 'arrive') {
-    $newId = arrive(current_observer());
+    $newId = arrive(current_observer(), single_phase());
     redirect($newId ? "index.php#customer-$newId" : 'settings.php');
 }
 
@@ -45,6 +45,9 @@ switch ($action) {
         break;
     case 'lost':
         customer_lost($id);
+        break;
+    case 'discard':
+        discard_customer($id);
         break;
     case 'reopen':
         reopen_customer($id);

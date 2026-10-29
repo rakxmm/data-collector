@@ -34,6 +34,11 @@ require __DIR__ . '/header.php';
                             <input type="hidden" name="id" value="<?= $step['id'] ?>">
                             <input type="text" name="name" value="<?= e($step['name']) ?>" maxlength="80"
                                    aria-label="<?= e(_t('Settings.NAME', 'Názov')) ?>" data-autosubmit>
+                            <?php if ($section['type'] === 'question'): ?>
+                                <input type="text" name="options" value="<?= e($step['options']) ?>" maxlength="200"
+                                       class="options-input" placeholder="<?= e(_t('Settings.YES_NO', 'áno / nie')) ?>"
+                                       aria-label="<?= e(_t('Settings.OPTIONS', 'Možnosti')) ?>" data-autosubmit>
+                            <?php endif ?>
                         </form>
 
                         <form method="post">
@@ -68,6 +73,10 @@ require __DIR__ . '/header.php';
                 <input type="hidden" name="action" value="add">
                 <input type="hidden" name="type" value="<?= $section['type'] ?>">
                 <input type="text" name="name" maxlength="80" placeholder="<?= e($section['placeholder']) ?>" required>
+                <?php if ($section['type'] === 'question'): ?>
+                    <input type="text" name="options" maxlength="200" class="options-input"
+                           placeholder="<?= e(_t('Settings.OPTIONS_PLACEHOLDER', 'Možnosti oddelené čiarkou (prázdne = áno / nie)')) ?>">
+                <?php endif ?>
                 <button class="btn"><?= e($section['button']) ?></button>
             </form>
 

@@ -43,7 +43,10 @@ data.rakxmm.dev {
 - **Next** starts the next phase. After the last phase it records the departure.
 - **Skip** – the customer left out the next phase.
 - **Undo** takes back the last step.
-- Phases and yes/no questions are edited in **Settings**.
+- **Discard** throws a record away (it can be taken back right after).
+- **Measure: only phase …** times just one chosen phase, e.g. service.
+- Phases and questions are edited in **Settings**. A question is yes/no, or has choices
+  (e.g. counter: ordered, not ordered, buffet).
 - **Records** shows average times and exports CSV (one row per customer, or one row per phase).
 
 ## Code

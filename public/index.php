@@ -10,6 +10,8 @@ if (only_mine()) {
     $customers = array_filter($customers, fn($customer) => mb_strtolower($customer['observer']) === $me);
 }
 
+$phases = get_phases();
+$singlePhase = single_phase();
 $questions = get_questions();
 $stepNames = get_step_names();
 

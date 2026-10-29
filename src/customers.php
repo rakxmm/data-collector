@@ -15,13 +15,13 @@ function get_active_customers(): array
 
 function get_finished_customers(string $day = ''): array
 {
-    $customers = query("SELECT * FROM customers WHERE status != 'active' ORDER BY arrived_at DESC")->fetchAll();
+    $customers = query("SELECT * FROM customers WHERE status IN ('done', 'lost') ORDER BY arrived_at DESC")->fetchAll();
     return filter_by_day($customers, $day);
 }
 
 function get_all_customers(string $day = ''): array
 {
-    $customers = query('SELECT * FROM customers ORDER BY arrived_at')->fetchAll();
+    $customers = query("SELECT * FROM customers WHERE status != 'discarded' ORDER BY arrived_at")->fetchAll();
     return filter_by_day($customers, $day);
 }
 
@@ -57,16 +57,21 @@ function get_answers(int $customerId): array
 
 function get_progress(array $customer): array
 {
-    $phases = get_phases();
     $marks = get_marks($customer['id']);
     $lastMark = end($marks);
     $current = get_step($lastMark['step_id']);
     $visitedIds = array_column($marks, 'step_id');
 
-    $ahead = array_values(array_filter(
-        $phases,
-        fn($phase) => $phase['position'] > $current['position'] && !in_array($phase['id'], $visitedIds)
-    ));
+    if ($customer['single_phase_id']) {
+        $phases = [$current];
+        $ahead = [];
+    } else {
+        $phases = get_phases();
+        $ahead = array_values(array_filter(
+            $phases,
+            fn($phase) => $phase['position'] > $current['position'] && !in_array($phase['id'], $visitedIds)
+        ));
+    }
 
     return [
         'phases' => $phases,
@@ -97,20 +102,28 @@ function get_timeline(array $customer, array $marks): array
     return $timeline;
 }
 
+// A single-phase record has no real arrival and departure, so no total time either.
 function total_duration(array $customer): ?float
 {
-    return $customer['left_at'] === null ? null : $customer['left_at'] - $customer['arrived_at'];
+    if ($customer['left_at'] === null || $customer['single_phase_id']) {
+        return null;
+    }
+    return $customer['left_at'] - $customer['arrived_at'];
 }
 
-function arrive(string $observer): ?int
+// $singlePhase: measure only this phase instead of the whole visit.
+function arrive(string $observer, ?array $singlePhase = null): ?int
 {
-    $firstPhase = get_phases()[0] ?? null;
+    $firstPhase = $singlePhase ?? get_phases()[0] ?? null;
     if (!$firstPhase) {
         return null;
     }
 
     $time = now();
-    query('INSERT INTO customers (observer, arrived_at) VALUES (?, ?)', [$observer, $time]);
+    query(
+        'INSERT INTO customers (observer, arrived_at, single_phase_id) VALUES (?, ?, ?)',
+        [$observer, $time, $singlePhase['id'] ?? null]
+    );
     $customerId = (int) db()->lastInsertId();
     add_mark($customerId, $firstPhase['id'], $time);
 
@@ -204,6 +217,12 @@ function customer_left(int $customerId, ?float $time = null): void
 function customer_lost(int $customerId): void
 {
     query("UPDATE customers SET status = 'lost', left_at = NULL WHERE id = ?", [$customerId]);
+}
+
+// Hidden from records and exports, but can still be taken back with reopen_customer().
+function discard_customer(int $customerId): void
+{
+    query("UPDATE customers SET status = 'discarded', left_at = NULL WHERE id = ?", [$customerId]);
 }
 
 function reopen_customer(int $customerId): void

@@ -22,10 +22,12 @@ function customers_csv_rows(string $day): array
         _t('Export.ARRIVAL', 'Príchod'),
         _t('Export.DEPARTURE', 'Odchod'),
         _t('Export.STATUS', 'Stav'),
+        _t('Export.MEASURED', 'Meranie'),
         _t('Export.OBSERVER', 'Pozorovateľ'),
         _t('Export.LABEL', 'Označenie'),
         _t('Export.TOTAL', 'Celkom') . " $seconds",
     ];
+    $stepNames = get_step_names();
     foreach ($phases as $phase) {
         $header[] = $phase['name'] . " $seconds";
     }
@@ -39,13 +41,16 @@ function customers_csv_rows(string $day): array
     foreach (get_all_customers($day) as $customer) {
         $timeline = get_timeline($customer, get_marks($customer['id']));
         $answers = get_answers($customer['id']);
+        $single = $customer['single_phase_id'];
 
+        // A single-phase record has no real arrival and departure.
         $row = [
             $customer['id'],
             day_of($customer['arrived_at']),
-            format_time($customer['arrived_at']),
-            $customer['left_at'] === null ? '' : format_time($customer['left_at']),
+            $single ? '' : format_time($customer['arrived_at']),
+            $single || $customer['left_at'] === null ? '' : format_time($customer['left_at']),
             status_label($customer['status']),
+            $single ? ($stepNames[$single] ?? '') : _t('Export.WHOLE_VISIT', 'celý priebeh'),
             $customer['observer'],
             $customer['label'],
             whole_seconds(total_duration($customer)),
@@ -54,7 +59,7 @@ function customers_csv_rows(string $day): array
             $row[] = whole_seconds($timeline[$phase['id']]['duration'] ?? null);
         }
         foreach ($questions as $question) {
-            $row[] = answer_label($answers[$question['id']] ?? null);
+            $row[] = answer_label($question, $answers[$question['id']] ?? null);
         }
         $row[] = $customer['note'];
 
@@ -99,7 +104,7 @@ function events_csv_rows(string $day): array
             ];
         }
 
-        if ($customer['left_at'] !== null) {
+        if ($customer['left_at'] !== null && !$customer['single_phase_id']) {
             $rows[] = [
                 $customer['id'], $customer['label'], $customer['observer'], count($marks) + 1,
                 _t('Export.DEPARTURE', 'Odchod'), format_datetime($customer['left_at']), '', '', '',

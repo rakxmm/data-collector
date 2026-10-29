@@ -404,6 +404,11 @@ kbd {
 .seg button + button { border-left: 1px solid var(--line-strong); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
 
+/* questions with choices: name above, buttons over the full width */
+.question.has-options { flex-direction: column; align-items: stretch; gap: 6px; }
+.has-options .seg { display: flex; }
+.has-options .seg button { flex: 1; height: auto; min-height: 34px; padding: 4px 6px; line-height: 1.2; }
+
 .tools { display: flex; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
 .tools form { flex: 1; }
 .tools .btn { width: 100%; }
@@ -593,6 +598,7 @@ kbd {
 
 .badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; }
 .badge-warn { background: var(--warn-soft); color: var(--warn); }
+.badge-info { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
 
 /* settings */
 
@@ -613,6 +619,9 @@ kbd {
 
 .step-add { display: flex; gap: 8px; }
 .step-add input[type="text"] { flex: 1; min-width: 0; }
+.step-add:has(.options-input) { flex-wrap: wrap; }
+.step-add .options-input[type="text"] { order: 3; flex: 1 1 100%; }
+.options-input[type="text"] { font-size: 13px; color: var(--ink-2); }
 
 .archived { margin-top: 12px; font-size: 13px; color: var(--muted); }
 .archived ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; padding: 0; list-style: none; }

@@ -8,6 +8,7 @@ $progress = $card['progress'];
 $id = $customer['id'];
 $current = $progress['current'];
 $next = $progress['next'];
+$isSingle = (bool) $customer['single_phase_id'];
 
 $phaseIds = array_column($progress['phases'], 'id');
 $phaseNumber = array_search($current['id'], $phaseIds);
@@ -26,32 +27,44 @@ $phaseNumber = array_search($current['id'], $phaseIds);
 
         <div class="card-total" title="<?= e(_t('Card.SINCE_ARRIVAL', 'Čas od príchodu')) ?>">
             <span class="num" data-since="<?= $customer['arrived_at'] ?>"></span>
-            <small><?= _t('Card.ARRIVED_AT', 'príchod {time}', ['time' => format_time($customer['arrived_at'])]) ?></small>
+            <small>
+                <?php if ($isSingle): ?>
+                    <?= _t('Card.STARTED_AT', 'začiatok {time}', ['time' => format_time($customer['arrived_at'])]) ?>
+                <?php else: ?>
+                    <?= _t('Card.ARRIVED_AT', 'príchod {time}', ['time' => format_time($customer['arrived_at'])]) ?>
+                <?php endif ?>
+            </small>
         </div>
     </header>
 
-    <ol class="track" aria-hidden="true">
-        <?php foreach ($progress['phases'] as $phase): ?>
-            <?php
-            $visited = $card['timeline'][$phase['id']] ?? null;
-            $state = match (true) {
-                $visited === null => '',
-                $visited['skipped'] => 'skipped',
-                $phase['id'] === $current['id'] => 'current',
-                default => 'done',
-            };
-            ?>
-            <li class="<?= $state ?>" title="<?= e($phase['name']) ?>"></li>
-        <?php endforeach ?>
-    </ol>
+    <?php if (!$isSingle): ?>
+        <ol class="track" aria-hidden="true">
+            <?php foreach ($progress['phases'] as $phase): ?>
+                <?php
+                $visited = $card['timeline'][$phase['id']] ?? null;
+                $state = match (true) {
+                    $visited === null => '',
+                    $visited['skipped'] => 'skipped',
+                    $phase['id'] === $current['id'] => 'current',
+                    default => 'done',
+                };
+                ?>
+                <li class="<?= $state ?>" title="<?= e($phase['name']) ?>"></li>
+            <?php endforeach ?>
+        </ol>
+    <?php endif ?>
 
     <div class="now">
         <div class="now-meta">
             <span class="live"><?= _t('Card.RUNNING', 'Prebieha') ?></span>
-            <span><?= _t('Card.PHASE_OF', 'Fáza {number} / {total}', [
-                'number' => $phaseNumber === false ? '–' : $phaseNumber + 1,
-                'total' => count($phaseIds),
-            ]) ?></span>
+            <?php if ($isSingle): ?>
+                <span><?= _t('Card.SINGLE_PHASE', 'Len táto fáza') ?></span>
+            <?php else: ?>
+                <span><?= _t('Card.PHASE_OF', 'Fáza {number} / {total}', [
+                    'number' => $phaseNumber === false ? '–' : $phaseNumber + 1,
+                    'total' => count($phaseIds),
+                ]) ?></span>
+            <?php endif ?>
         </div>
         <div class="now-name"><?= e($current['name']) ?></div>
         <div class="now-time" data-since="<?= $progress['current_since'] ?>"></div>
@@ -65,6 +78,11 @@ $phaseNumber = array_search($current['id'], $phaseIds);
                     <span><span class="lead"><?= _t('Card.NEXT', 'Ďalej') ?></span><strong><?= e($next['name']) ?></strong></span>
                     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m0 0-4-4m4 4-4 4"/></svg>
                 </button>
+            <?php elseif ($isSingle): ?>
+                <button class="btn-next is-final">
+                    <span><strong><?= _t('Card.END_PHASE', 'Koniec fázy') ?></strong></span>
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8"/></svg>
+                </button>
             <?php else: ?>
                 <button class="btn-next is-final">
                     <span>
@@ -77,33 +95,53 @@ $phaseNumber = array_search($current['id'], $phaseIds);
         </form>
 
         <?php foreach ($questions as $question): ?>
-            <?php $answer = $card['answers'][$question['id']] ?? null; ?>
-            <form class="question" method="post" action="customer.php">
+            <?php
+            $answer = $card['answers'][$question['id']] ?? null;
+            $options = question_options($question);
+            ?>
+            <form class="question <?= $options ? 'has-options' : '' ?>" method="post" action="customer.php">
                 <?= customer_fields('answer', $id) ?>
                 <input type="hidden" name="step" value="<?= $question['id'] ?>">
                 <span class="question-name"><?= e($question['name']) ?></span>
                 <span class="seg">
-                    <button name="value" value="1" aria-pressed="<?= $answer === 1 ? 'true' : 'false' ?>"><?= _t('Common.YES', 'Áno') ?></button>
-                    <button name="value" value="0" aria-pressed="<?= $answer === 0 ? 'true' : 'false' ?>"><?= _t('Common.NO', 'Nie') ?></button>
+                    <?php if ($options): ?>
+                        <?php foreach ($options as $i => $option): ?>
+                            <button name="value" value="<?= $i + 1 ?>" aria-pressed="<?= $answer === $i + 1 ? 'true' : 'false' ?>">
+                                <?= e($option) ?>
+                            </button>
+                        <?php endforeach ?>
+                    <?php else: ?>
+                        <button name="value" value="1" aria-pressed="<?= $answer === 1 ? 'true' : 'false' ?>"><?= _t('Common.YES', 'Áno') ?></button>
+                        <button name="value" value="0" aria-pressed="<?= $answer === 0 ? 'true' : 'false' ?>"><?= _t('Common.NO', 'Nie') ?></button>
+                    <?php endif ?>
                 </span>
             </form>
         <?php endforeach ?>
 
         <div class="tools">
+            <?php if (!$isSingle): ?>
+                <form method="post" action="customer.php">
+                    <?= customer_fields('undo', $id) ?>
+                    <button class="btn btn-sm" <?= count($progress['marks']) <= 1 ? 'disabled' : '' ?>
+                            title="<?= e(_t('Card.UNDO_HINT', 'Vráti posledný krok')) ?>">
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3.5 2.5 6.5l3 3M2.8 6.5H10a3.5 3.5 0 0 1 0 7H7"/></svg>
+                        <?= _t('Common.UNDO', 'Späť') ?>
+                    </button>
+                </form>
+                <form method="post" action="customer.php">
+                    <?= customer_fields('skip', $id) ?>
+                    <button class="btn btn-sm" <?= $next ? '' : 'disabled' ?>
+                            title="<?= $next ? e(_t('Card.SKIP_HINT', 'Preskočí fázu „{name}“', ['name' => $next['name']])) : '' ?>">
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 4 4.5 4L3 12M9 4l4.5 4L9 12"/></svg>
+                        <?= _t('Card.SKIP', 'Preskočiť') ?>
+                    </button>
+                </form>
+            <?php endif ?>
             <form method="post" action="customer.php">
-                <?= customer_fields('undo', $id) ?>
-                <button class="btn btn-sm" <?= count($progress['marks']) <= 1 ? 'disabled' : '' ?>
-                        title="<?= e(_t('Card.UNDO_HINT', 'Vráti posledný krok')) ?>">
-                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3.5 2.5 6.5l3 3M2.8 6.5H10a3.5 3.5 0 0 1 0 7H7"/></svg>
-                    <?= _t('Common.UNDO', 'Späť') ?>
-                </button>
-            </form>
-            <form method="post" action="customer.php">
-                <?= customer_fields('skip', $id) ?>
-                <button class="btn btn-sm" <?= $next ? '' : 'disabled' ?>
-                        title="<?= $next ? e(_t('Card.SKIP_HINT', 'Preskočí fázu „{name}“', ['name' => $next['name']])) : '' ?>">
-                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 4 4.5 4L3 12M9 4l4.5 4L9 12"/></svg>
-                    <?= _t('Card.SKIP', 'Preskočiť') ?>
+                <?= customer_fields('discard', $id) ?>
+                <button class="btn btn-sm" title="<?= e(_t('Card.DISCARD_HINT', 'Zahodí záznam, nebude v záznamoch ani v exporte')) ?>">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"/></svg>
+                    <?= _t('Card.DISCARD', 'Zahodiť') ?>
                 </button>
             </form>
         </div>

@@ -2,6 +2,8 @@
 /** @var array $cards */
 /** @var int $totalCount tracked customers before the "only mine" filter */
 /** @var array|null $closedCustomer */
+/** @var array $phases */
+/** @var array|null $singlePhase phase measured alone on this device */
 
 require __DIR__ . '/header.php';
 ?>
@@ -19,6 +21,17 @@ require __DIR__ . '/header.php';
 
     <form class="view-actions" method="post" action="preferences.php">
         <input type="hidden" name="back" value="index.php">
+        <label class="field-inline">
+            <?= _t('Measure.MODE', 'Merať') ?>
+            <select name="single_phase" data-autosubmit>
+                <option value="0"><?= _t('Measure.WHOLE_VISIT', 'celý priebeh') ?></option>
+                <?php foreach ($phases as $phase): ?>
+                    <option value="<?= $phase['id'] ?>" <?= $phase['id'] === ($singlePhase['id'] ?? null) ? 'selected' : '' ?>>
+                        <?= e(_t('Measure.ONLY_PHASE', 'len fázu: {name}', ['name' => $phase['name']])) ?>
+                    </option>
+                <?php endforeach ?>
+            </select>
+        </label>
         <input type="hidden" name="only_mine" value="0">
         <label class="switch">
             <input type="checkbox" name="only_mine" value="1" <?= only_mine() ? 'checked' : '' ?> data-autosubmit>
@@ -45,7 +58,11 @@ require __DIR__ . '/header.php';
     <input type="hidden" name="action" value="arrive">
     <button class="btn-arrive">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>
-        <span><?= _t('Measure.ARRIVE', 'Príchod zákazníka') ?></span>
+        <?php if ($singlePhase): ?>
+            <span><?= _t('Measure.START_PHASE', 'Začiatok: {name}', ['name' => e($singlePhase['name'])]) ?></span>
+        <?php else: ?>
+            <span><?= _t('Measure.ARRIVE', 'Príchod zákazníka') ?></span>
+        <?php endif ?>
         <kbd>N</kbd>
     </button>
 </form>
@@ -54,13 +71,20 @@ require __DIR__ . '/header.php';
     <form class="toast" method="post" action="customer.php">
         <?= customer_fields('reopen', $closedCustomer['id']) ?>
         <span>
-            <?php if ($closedCustomer['status'] === 'done'): ?>
-                <?= _t('Measure.LEFT', '#{id} – odchod zaznamenaný ({time})', [
-                    'id' => $closedCustomer['id'],
-                    'time' => format_duration(total_duration($closedCustomer)),
-                ]) ?>
+            <?php
+            $params = [
+                'id' => $closedCustomer['id'],
+                'time' => format_duration($closedCustomer['left_at'] - $closedCustomer['arrived_at']),
+            ];
+            ?>
+            <?php if ($closedCustomer['status'] === 'discarded'): ?>
+                <?= _t('Measure.DISCARDED', '#{id} – záznam zahodený', $params) ?>
+            <?php elseif ($closedCustomer['status'] === 'lost'): ?>
+                <?= _t('Measure.STOPPED', '#{id} – sledovanie ukončené', $params) ?>
+            <?php elseif ($closedCustomer['single_phase_id']): ?>
+                <?= _t('Measure.PHASE_MEASURED', '#{id} – fáza zmeraná ({time})', $params) ?>
             <?php else: ?>
-                <?= _t('Measure.STOPPED', '#{id} – sledovanie ukončené', ['id' => $closedCustomer['id']]) ?>
+                <?= _t('Measure.LEFT', '#{id} – odchod zaznamenaný ({time})', $params) ?>
             <?php endif ?>
         </span>
         <button><?= _t('Common.UNDO', 'Späť') ?></button>
