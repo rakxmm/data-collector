@@ -21,6 +21,22 @@ BASIC_AUTH=user:password docker compose up -d
 
 Data is stored in the `data-collector-data` Docker volume.
 
+## Server
+
+On the server the app has no public port and runs behind Caddy:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Caddy must be in the `data-collector-edge` network and have a site block:
+
+```
+data.rakxmm.dev {
+	reverse_proxy data-collector:80
+}
+```
+
 ## Usage
 
 - **Customer arrived** (or the `N` key) adds a customer and starts the first phase.

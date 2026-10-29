@@ -1,0 +1,22 @@
+# Server: no public port, Caddy reaches the app through the data-collector-edge network.
+name: data-collector
+
+services:
+  data-collector:
+    build: .
+    container_name: data-collector
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Bratislava
+      BASIC_AUTH: ${BASIC_AUTH:-}
+    volumes:
+      - data-collector-data:/data
+    networks:
+      - data-collector-edge
+
+networks:
+  data-collector-edge:
+    name: data-collector-edge
+
+volumes:
+  data-collector-data:
