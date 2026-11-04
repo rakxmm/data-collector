@@ -12,7 +12,8 @@ if (isset($_POST['only_mine'])) {
     setcookie('only_mine', $_POST['only_mine'] === '1' ? '1' : '0', $expires);
 }
 if (isset($_POST['single_phase'])) {
-    setcookie('single_phase', (string) (int) $_POST['single_phase'], $expires);
+    $mode = $_POST['single_phase'] === 'arrival' ? 'arrival' : (string) (int) $_POST['single_phase'];
+    setcookie('single_phase', $mode, $expires);
 }
 if (isset($_POST['lang']) && isset(LANGUAGES[$_POST['lang']])) {
     setcookie('lang', $_POST['lang'], $expires);

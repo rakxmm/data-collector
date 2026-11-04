@@ -1,6 +1,8 @@
 <?php
 /** @var string $day '' = all days */
 /** @var string $separator 'semicolon' or 'comma' */
+/** @var string $measure see measure_of(), '' = everything */
+/** @var array $measuredPhases phases that can be filtered by */
 /** @var array $days [day => number of customers] */
 /** @var array $phases */
 /** @var array $questions */
@@ -26,6 +28,19 @@ require __DIR__ . '/header.php';
                     <option value=""><?= _t('Records.ALL_DAYS', 'Všetky dni') ?></option>
                     <?php foreach ($days as $value => $dayCount): ?>
                         <option value="<?= $value ?>" <?= $value === $day ? 'selected' : '' ?>><?= format_day($value) ?> (<?= $dayCount ?>)</option>
+                    <?php endforeach ?>
+                </select>
+            </label>
+            <label class="field-inline">
+                <?= _t('Records.MEASURE', 'Meranie') ?>
+                <select name="measure" data-autosubmit>
+                    <option value=""><?= _t('Records.ALL_MEASURES', 'Všetko') ?></option>
+                    <option value="whole" <?= $measure === 'whole' ? 'selected' : '' ?>><?= _t('Measure.WHOLE_VISIT', 'celý priebeh') ?></option>
+                    <option value="arrival" <?= $measure === 'arrival' ? 'selected' : '' ?>><?= _t('Measure.ARRIVAL_ONLY', 'len príchod') ?></option>
+                    <?php foreach ($measuredPhases as $phase): ?>
+                        <option value="<?= $phase['id'] ?>" <?= $measure === (string) $phase['id'] ? 'selected' : '' ?>>
+                            <?= e(_t('Measure.ONLY_PHASE', 'len fázu: {name}', ['name' => $phase['name']])) ?>
+                        </option>
                     <?php endforeach ?>
                 </select>
             </label>
@@ -57,6 +72,7 @@ require __DIR__ . '/header.php';
     </div>
 <?php else: ?>
 
+    <?php if ($summary): ?>
     <section class="panel summary">
         <h2><?= _t('Records.SUMMARY', 'Priemerné časy') ?></h2>
         <table class="summary-table">
@@ -80,6 +96,7 @@ require __DIR__ . '/header.php';
             </tbody>
         </table>
     </section>
+    <?php endif ?>
 
     <!-- On narrow screens CSS turns every row into a card. -->
     <div class="table-wrap">
@@ -110,6 +127,9 @@ require __DIR__ . '/header.php';
                             <?= e($customer['label']) ?>
                         <?php else: ?>
                             <span class="muted"><?= _t('Records.NO_LABEL', 'bez označenia') ?></span>
+                        <?php endif ?>
+                        <?php if ($customer['arrival_only']): ?>
+                            <span class="badge badge-info"><?= _t('Records.ARRIVAL_ONLY', 'len príchod') ?></span>
                         <?php endif ?>
                         <?php if ($customer['single_phase_id']): ?>
                             <span class="badge badge-info"><?= _t('Records.SINGLE_PHASE', 'len fáza') ?></span>

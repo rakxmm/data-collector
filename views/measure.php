@@ -25,6 +25,7 @@ require __DIR__ . '/header.php';
             <?= _t('Measure.MODE', 'Merať') ?>
             <select name="single_phase" data-autosubmit>
                 <option value="0"><?= _t('Measure.WHOLE_VISIT', 'celý priebeh') ?></option>
+                <option value="arrival" <?= arrival_only() ? 'selected' : '' ?>><?= _t('Measure.ARRIVAL_ONLY', 'len príchod') ?></option>
                 <?php foreach ($phases as $phase): ?>
                     <option value="<?= $phase['id'] ?>" <?= $phase['id'] === ($singlePhase['id'] ?? null) ? 'selected' : '' ?>>
                         <?= e(_t('Measure.ONLY_PHASE', 'len fázu: {name}', ['name' => $phase['name']])) ?>
@@ -74,10 +75,12 @@ require __DIR__ . '/header.php';
             <?php
             $params = [
                 'id' => $closedCustomer['id'],
-                'time' => format_duration($closedCustomer['left_at'] - $closedCustomer['arrived_at']),
+                'time' => format_duration(($closedCustomer['left_at'] ?? $closedCustomer['arrived_at']) - $closedCustomer['arrived_at']),
             ];
             ?>
-            <?php if ($closedCustomer['status'] === 'discarded'): ?>
+            <?php if ($closedCustomer['arrival_only']): ?>
+                <?= _t('Measure.ARRIVAL_RECORDED', '#{id} – príchod zaznamenaný ({clock})', $params + ['clock' => format_time($closedCustomer['arrived_at'])]) ?>
+            <?php elseif ($closedCustomer['status'] === 'discarded'): ?>
                 <?= _t('Measure.DISCARDED', '#{id} – záznam zahodený', $params) ?>
             <?php elseif ($closedCustomer['status'] === 'lost'): ?>
                 <?= _t('Measure.STOPPED', '#{id} – sledovanie ukončené', $params) ?>

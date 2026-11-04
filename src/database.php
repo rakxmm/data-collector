@@ -51,7 +51,8 @@ function create_tables(PDO $pdo): void
             status     TEXT NOT NULL DEFAULT 'active', -- 'active', 'done', 'lost' or 'discarded'
             arrived_at REAL NOT NULL,
             left_at    REAL,
-            single_phase_id INTEGER REFERENCES steps(id) -- set when only this one phase is measured
+            single_phase_id INTEGER REFERENCES steps(id), -- set when only this one phase is measured
+            arrival_only    INTEGER NOT NULL DEFAULT 0    -- only the arrival was recorded, no phases
         );
 
         -- Start of a phase. The phase ends when the next one starts or the customer leaves.
@@ -74,6 +75,7 @@ function create_tables(PDO $pdo): void
     // Columns added after the first release.
     add_missing_column($pdo, 'customers', 'single_phase_id', 'INTEGER REFERENCES steps(id)');
     add_missing_column($pdo, 'steps', 'options', "TEXT NOT NULL DEFAULT ''");
+    add_missing_column($pdo, 'customers', 'arrival_only', 'INTEGER NOT NULL DEFAULT 0');
 
     if ($pdo->query('SELECT COUNT(*) FROM steps')->fetchColumn() == 0) {
         insert_default_steps($pdo);

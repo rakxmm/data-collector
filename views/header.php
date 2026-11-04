@@ -16,7 +16,7 @@ $tabs = [
     <meta name="theme-color" content="#15171a">
     <title><?= e($pageTitle) ?> · Data Collector</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="app.css?v=<?= e(config('version')) ?>">
 </head>
 <body data-server-time="<?= now() ?>">
 

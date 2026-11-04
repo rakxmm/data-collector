@@ -10,7 +10,7 @@ function status_label(string $status): string
 }
 
 // One row per customer, phase durations in seconds.
-function customers_csv_rows(string $day): array
+function customers_csv_rows(string $day, string $measure = ''): array
 {
     $phases = get_steps_for_export('phase');
     $questions = get_steps_for_export('question');
@@ -38,19 +38,23 @@ function customers_csv_rows(string $day): array
 
     $rows = [$header];
 
-    foreach (get_all_customers($day) as $customer) {
+    foreach (get_all_customers($day, $measure) as $customer) {
         $timeline = get_timeline($customer, get_marks($customer['id']));
         $answers = get_answers($customer['id']);
         $single = $customer['single_phase_id'];
 
-        // A single-phase record has no real arrival and departure.
+        // A single-phase record arrives when its phase starts and has no real departure.
         $row = [
             $customer['id'],
             day_of($customer['arrived_at']),
-            $single ? '' : format_time($customer['arrived_at']),
+            format_time($customer['arrived_at']),
             $single || $customer['left_at'] === null ? '' : format_time($customer['left_at']),
             status_label($customer['status']),
-            $single ? ($stepNames[$single] ?? '') : _t('Export.WHOLE_VISIT', 'celý priebeh'),
+            match (true) {
+                (bool) $customer['arrival_only'] => _t('Export.ARRIVAL_ONLY', 'len príchod'),
+                (bool) $single => $stepNames[$single] ?? '',
+                default => _t('Export.WHOLE_VISIT', 'celý priebeh'),
+            },
             $customer['observer'],
             $customer['label'],
             whole_seconds(total_duration($customer)),
@@ -70,7 +74,7 @@ function customers_csv_rows(string $day): array
 }
 
 // One row per phase with exact start and end times.
-function events_csv_rows(string $day): array
+function events_csv_rows(string $day, string $measure = ''): array
 {
     $stepNames = get_step_names();
     $rows = [[
@@ -85,7 +89,7 @@ function events_csv_rows(string $day): array
         _t('Export.SKIPPED', 'Preskočené'),
     ]];
 
-    foreach (get_all_customers($day) as $customer) {
+    foreach (get_all_customers($day, $measure) as $customer) {
         $marks = get_marks($customer['id']);
         $timeline = get_timeline($customer, $marks);
 
@@ -101,6 +105,13 @@ function events_csv_rows(string $day): array
                 $phase['skipped'] ? '' : format_datetime($phase['end']),
                 whole_seconds($phase['duration']),
                 $phase['skipped'] ? _t('Common.YES_LOWER', 'áno') : '',
+            ];
+        }
+
+        if ($customer['arrival_only']) {
+            $rows[] = [
+                $customer['id'], $customer['label'], $customer['observer'], 1,
+                _t('Export.ARRIVAL', 'Príchod'), format_datetime($customer['arrived_at']), '', '', '',
             ];
         }
 

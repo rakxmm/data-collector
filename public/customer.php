@@ -5,6 +5,9 @@ require __DIR__ . '/../src/bootstrap.php';
 
 $action = $_POST['action'] ?? '';
 
+if ($action === 'arrive' && arrival_only()) {
+    redirect('index.php?closed=' . record_arrival(current_observer()));
+}
 if ($action === 'arrive') {
     $newId = arrive(current_observer(), single_phase());
     redirect($newId ? "index.php#customer-$newId" : 'settings.php');
@@ -50,6 +53,11 @@ switch ($action) {
         discard_customer($id);
         break;
     case 'reopen':
+        // An arrival-only record has nothing to resume, so taking it back removes it.
+        if ($customer['arrival_only']) {
+            delete_customer($id);
+            redirect('index.php');
+        }
         reopen_customer($id);
         break;
     case 'delete':

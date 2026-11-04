@@ -45,9 +45,16 @@ data.rakxmm.dev {
 - **Undo** takes back the last step.
 - **Discard** throws a record away (it can be taken back right after).
 - **Measure: only phase …** times just one chosen phase, e.g. service.
+- **Measure: arrivals only** counts arrivals. Every tap records one arrival and finishes the record right away.
 - Phases and questions are edited in **Settings**. A question is yes/no, or has choices
   (e.g. counter: ordered, not ordered, buffet).
 - **Records** shows average times and exports CSV (one row per customer, or one row per phase).
+  The **Measured** filter shows only whole visits, arrivals, or one phase measured alone.
+
+## Version
+
+The version and GitHub link in the footer come from `src/config.php`. Bump `version` with every release,
+it is also added to the CSS/JS URLs so browsers load the new files.
 
 ## Code
 

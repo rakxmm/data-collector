@@ -13,16 +13,16 @@ function get_active_customers(): array
     return query("SELECT * FROM customers WHERE status = 'active' ORDER BY arrived_at")->fetchAll();
 }
 
-function get_finished_customers(string $day = ''): array
+function get_finished_customers(string $day = '', string $measure = ''): array
 {
     $customers = query("SELECT * FROM customers WHERE status IN ('done', 'lost') ORDER BY arrived_at DESC")->fetchAll();
-    return filter_by_day($customers, $day);
+    return filter_by_measure(filter_by_day($customers, $day), $measure);
 }
 
-function get_all_customers(string $day = ''): array
+function get_all_customers(string $day = '', string $measure = ''): array
 {
     $customers = query("SELECT * FROM customers WHERE status != 'discarded' ORDER BY arrived_at")->fetchAll();
-    return filter_by_day($customers, $day);
+    return filter_by_measure(filter_by_day($customers, $day), $measure);
 }
 
 function filter_by_day(array $customers, string $day): array
@@ -31,6 +31,24 @@ function filter_by_day(array $customers, string $day): array
         return $customers;
     }
     return array_values(array_filter($customers, fn($customer) => day_of($customer['arrived_at']) === $day));
+}
+
+function filter_by_measure(array $customers, string $measure): array
+{
+    if ($measure === '') {
+        return $customers;
+    }
+    return array_values(array_filter($customers, fn($customer) => measure_of($customer) === $measure));
+}
+
+// What was measured: 'whole', 'arrival' or the id of the phase measured alone.
+function measure_of(array $customer): string
+{
+    return match (true) {
+        (bool) $customer['arrival_only'] => 'arrival',
+        (bool) $customer['single_phase_id'] => (string) $customer['single_phase_id'],
+        default => 'whole',
+    };
 }
 
 // ['2026-10-28' => number of finished customers, ...], newest first.
@@ -128,6 +146,16 @@ function arrive(string $observer, ?array $singlePhase = null): ?int
     add_mark($customerId, $firstPhase['id'], $time);
 
     return $customerId;
+}
+
+// Counting arrivals only: the record is finished right away, without any phase.
+function record_arrival(string $observer): int
+{
+    query(
+        "INSERT INTO customers (observer, arrived_at, status, arrival_only) VALUES (?, ?, 'done', 1)",
+        [$observer, now()]
+    );
+    return (int) db()->lastInsertId();
 }
 
 function add_mark(int $customerId, int $stepId, float $time, bool $skipped = false): void

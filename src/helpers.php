@@ -1,5 +1,13 @@
 <?php
 
+// Values from src/config.php, e.g. config('version').
+function config(string $key): string
+{
+    static $config = null;
+    $config ??= require __DIR__ . '/config.php';
+    return $config[$key];
+}
+
 function e(mixed $text): string
 {
     return htmlspecialchars((string) $text, ENT_QUOTES);
@@ -27,6 +35,12 @@ function only_mine(): bool
     return ($_COOKIE['only_mine'] ?? '') === '1';
 }
 
+// Only arrivals are counted on this device, without phases.
+function arrival_only(): bool
+{
+    return ($_COOKIE['single_phase'] ?? '') === 'arrival';
+}
+
 // The phase chosen for measuring alone on this device, null = the whole visit.
 function single_phase(): ?array
 {
@@ -44,6 +58,13 @@ function requested_day(): string
 {
     $day = $_GET['day'] ?? '';
     return preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) ? $day : '';
+}
+
+// ?measure= from the URL, see measure_of(). '' means everything.
+function requested_measure(): string
+{
+    $measure = $_GET['measure'] ?? '';
+    return preg_match('/^(whole|arrival|\d+)$/', $measure) ? $measure : '';
 }
 
 // 125 -> "02:05", 3725 -> "1:02:05"

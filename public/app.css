@@ -164,6 +164,9 @@ svg { flex: none; }
 
 .hint { color: var(--muted); font-size: 13px; margin-top: 14px; max-width: 760px; }
 
+.site-footer { margin-top: 32px; color: var(--faint); font-size: 12px; }
+.site-footer a { color: inherit; }
+
 /* buttons and inputs */
 
 .btn {
