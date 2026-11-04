@@ -66,3 +66,7 @@ lang/     translations
 ```
 
 Texts are translated with `_t('Key', 'Slovak text')`, English is in `lang/en.php`.
+
+## License
+
+[MIT](LICENSE)
