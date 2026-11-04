@@ -91,6 +91,7 @@ return [
     'Records.SINGLE_PHASE' => 'single phase',
     'Records.ARRIVAL_ONLY' => 'arrival only',
     'Records.MEASURE' => 'Measured',
+    'Records.WITH_PHASE' => 'phase: {name}',
     'Records.ALL_MEASURES' => 'Everything',
     'Records.LOST_HINT' => 'Lost sight, no departure time',
     'Records.DELETE' => 'Delete record',

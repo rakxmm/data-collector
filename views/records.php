@@ -39,7 +39,7 @@ require __DIR__ . '/header.php';
                     <option value="arrival" <?= $measure === 'arrival' ? 'selected' : '' ?>><?= _t('Measure.ARRIVAL_ONLY', 'len príchod') ?></option>
                     <?php foreach ($measuredPhases as $phase): ?>
                         <option value="<?= $phase['id'] ?>" <?= $measure === (string) $phase['id'] ? 'selected' : '' ?>>
-                            <?= e(_t('Measure.ONLY_PHASE', 'len fázu: {name}', ['name' => $phase['name']])) ?>
+                            <?= e(_t('Records.WITH_PHASE', 'fáza: {name}', ['name' => $phase['name']])) ?>
                         </option>
                     <?php endforeach ?>
                 </select>

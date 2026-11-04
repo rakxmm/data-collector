@@ -49,7 +49,8 @@ data.rakxmm.dev {
 - Phases and questions are edited in **Settings**. A question is yes/no, or has choices
   (e.g. counter: ordered, not ordered, buffet).
 - **Records** shows average times and exports CSV (one row per customer, or one row per phase).
-  The **Measured** filter shows only whole visits, arrivals, or one phase measured alone.
+  The **Measured** filter shows only whole visits, arrivals, or every record with a chosen phase
+  (measured alone or as part of the whole visit).
 
 ## Version
 

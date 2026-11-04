@@ -33,11 +33,20 @@ function filter_by_day(array $customers, string $day): array
     return array_values(array_filter($customers, fn($customer) => day_of($customer['arrived_at']) === $day));
 }
 
+// $measure: '' = everything, 'whole', 'arrival', or a phase id = every record where that phase was measured,
+// both alone and as part of the whole visit.
 function filter_by_measure(array $customers, string $measure): array
 {
     if ($measure === '') {
         return $customers;
     }
+
+    if (ctype_digit($measure)) {
+        $ids = query('SELECT DISTINCT customer_id FROM marks WHERE step_id = ? AND skipped = 0', [(int) $measure])
+            ->fetchAll(PDO::FETCH_COLUMN);
+        return array_values(array_filter($customers, fn($customer) => in_array($customer['id'], $ids)));
+    }
+
     return array_values(array_filter($customers, fn($customer) => measure_of($customer) === $measure));
 }
 
