@@ -199,6 +199,27 @@ svg { flex: none; }
 .btn-icon { width: 32px; padding: 0; }
 .btn-group { display: flex; gap: 8px; }
 
+.export-menu { position: relative; }
+.export-menu summary { list-style: none; }
+.export-menu summary::-webkit-details-marker { display: none; }
+.export-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 260px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(21, 23, 26, 0.12);
+}
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.export-hint { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+
 input[type="text"], select, textarea {
   height: 36px;
   padding: 0 10px;
@@ -646,5 +667,7 @@ kbd {
   .btn-arrive { width: 100%; }
   .view-actions, .btn-group { width: 100%; }
   .btn-group .btn { flex: 1; }
+  .export-menu, .export-menu summary { width: 100%; }
+  .export-panel { left: 0; width: auto; }
   .settings-grid { grid-template-columns: 1fr; }
 }

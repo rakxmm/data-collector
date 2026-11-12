@@ -48,10 +48,13 @@ data.rakxmm.dev {
 - **Measure: arrivals only** counts arrivals. Every tap records one arrival and finishes the record right away.
 - Phases and questions are edited in **Settings**. A question is yes/no, or has choices
   (e.g. counter: ordered, not ordered, buffet).
-- **Records** shows average times and exports CSV (one row per customer, or one row per phase).
+- **Records** shows average times and exports CSV.
   The **Measured** filter shows only whole visits, arrivals, or every record with a chosen phase
-  (measured alone or as part of the whole visit). Both CSV exports follow the chosen day and filter,
-  and the file name says which, e.g. `data-collector-zakaznici-cakanie-v-rade-2026-11-12.csv`.
+  (measured alone or as part of the whole visit).
+- **Export CSV** follows the chosen day and filter: one row per customer with the columns you tick –
+  number, phase durations in seconds, total time (whole visits) and answers; with arrivals only the number
+  and arrival time. A single ticked column downloads as a plain list of values without a header.
+  The file name says what is inside, e.g. `data-collector-cakanie-v-rade-2026-11-12.csv`.
 
 ## Version
 

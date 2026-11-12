@@ -1,130 +1,69 @@
 <?php
 
-function status_label(string $status): string
+// Columns the export offers for a measure filter, [key => header], in export order.
+// Arrivals only: number and arrival time. Otherwise: number, phase durations in seconds,
+// total time (whole visits only) and answers to the questions.
+function export_columns(string $measure): array
 {
-    return match ($status) {
-        'active' => _t('Status.ACTIVE', 'prebieha'),
-        'done' => _t('Status.DONE', 'dokončený'),
-        default => _t('Status.LOST', 'nedokončený'),
-    };
-}
+    if ($measure === 'arrival') {
+        return ['number' => _t('Export.NUMBER', 'Č.'), 'arrival' => _t('Export.ARRIVAL', 'Príchod')];
+    }
 
-// One row per customer, phase durations in seconds. Same rows and phase columns as the records table.
-function customers_csv_rows(string $day, string $measure = ''): array
-{
-    $phases = phases_for_measure($measure);
-    $questions = get_steps_for_export('question');
     $seconds = _t('Export.SECONDS', '(s)');
-
-    $header = [
-        _t('Export.NUMBER', 'Č.'),
-        _t('Export.DATE', 'Dátum'),
-        _t('Export.ARRIVAL', 'Príchod'),
-        _t('Export.DEPARTURE', 'Odchod'),
-        _t('Export.STATUS', 'Stav'),
-        _t('Export.MEASURED', 'Meranie'),
-        _t('Export.OBSERVER', 'Pozorovateľ'),
-        _t('Export.LABEL', 'Označenie'),
-        _t('Export.TOTAL', 'Celkom') . " $seconds",
-    ];
-    $stepNames = get_step_names();
-    foreach ($phases as $phase) {
-        $header[] = $phase['name'] . " $seconds";
+    $columns = ['number' => _t('Export.NUMBER', 'Č.')];
+    foreach (phases_for_measure($measure) as $phase) {
+        $columns['phase-' . $phase['id']] = $phase['name'] . " $seconds";
     }
-    foreach ($questions as $question) {
-        $header[] = $question['name'];
+    if (in_array($measure, ['', 'whole'], true)) {
+        $columns['total'] = _t('Export.TOTAL', 'Celkom') . " $seconds";
     }
-    $header[] = _t('Export.NOTE', 'Poznámka');
-
-    $rows = [$header];
-
-    foreach (get_all_customers($day, $measure) as $customer) {
-        $timeline = get_timeline($customer, get_marks($customer['id']));
-        $answers = get_answers($customer['id']);
-        $single = $customer['single_phase_id'];
-
-        // A single-phase record arrives when its phase starts and has no real departure.
-        $row = [
-            $customer['id'],
-            day_of($customer['arrived_at']),
-            format_time($customer['arrived_at']),
-            $single || $customer['left_at'] === null ? '' : format_time($customer['left_at']),
-            status_label($customer['status']),
-            match (true) {
-                (bool) $customer['arrival_only'] => _t('Export.ARRIVAL_ONLY', 'len príchod'),
-                (bool) $single => $stepNames[$single] ?? '',
-                default => _t('Export.WHOLE_VISIT', 'celý priebeh'),
-            },
-            $customer['observer'],
-            $customer['label'],
-            whole_seconds(total_duration($customer)),
-        ];
-        foreach ($phases as $phase) {
-            $row[] = whole_seconds($timeline[$phase['id']]['duration'] ?? null);
-        }
-        foreach ($questions as $question) {
-            $row[] = answer_label($question, $answers[$question['id']] ?? null);
-        }
-        $row[] = $customer['note'];
-
-        $rows[] = $row;
+    foreach (get_steps_for_export('question') as $question) {
+        $columns['question-' . $question['id']] = $question['name'];
     }
-
-    return $rows;
+    return $columns;
 }
 
-// One row per phase with exact start and end times. Filtered by a phase, only that phase is listed.
-function events_csv_rows(string $day, string $measure = ''): array
+// [column key => value] for one customer, see export_columns().
+function export_values(array $customer, array $questions): array
 {
-    $onlyPhase = ctype_digit($measure) ? (int) $measure : null;
-    $stepNames = get_step_names();
-    $rows = [[
-        _t('Export.NUMBER', 'Č.'),
-        _t('Export.LABEL', 'Označenie'),
-        _t('Export.OBSERVER', 'Pozorovateľ'),
-        _t('Export.ORDER', 'Poradie'),
-        _t('Export.PHASE', 'Fáza'),
-        _t('Export.START', 'Začiatok'),
-        _t('Export.END', 'Koniec'),
-        _t('Export.DURATION', 'Trvanie') . ' ' . _t('Export.SECONDS', '(s)'),
-        _t('Export.SKIPPED', 'Preskočené'),
-    ]];
+    $values = [
+        'number' => $customer['id'],
+        'arrival' => format_time($customer['arrived_at']),
+        'total' => whole_seconds(total_duration($customer)),
+    ];
+    foreach (get_timeline($customer, get_marks($customer['id'])) as $stepId => $phase) {
+        $values["phase-$stepId"] = whole_seconds($phase['duration']);
+    }
+    $answers = get_answers($customer['id']);
+    foreach ($questions as $question) {
+        $values['question-' . $question['id']] = answer_label($question, $answers[$question['id']] ?? null);
+    }
+    return $values;
+}
+
+// One row per customer, filtered like the records table. $keys picks columns, [] = all.
+// A single column is exported as a plain list of values: no header and no empty rows.
+function export_csv_rows(string $day, string $measure, array $keys = []): array
+{
+    $available = export_columns($measure);
+    $columns = array_intersect_key($available, array_flip($keys)) ?: $available;
+    $onlyValues = count($columns) === 1;
+    $questions = get_steps_for_export('question');
+
+    $rows = $onlyValues ? [] : [array_values($columns)];
 
     foreach (get_all_customers($day, $measure) as $customer) {
-        $marks = get_marks($customer['id']);
-        $timeline = get_timeline($customer, $marks);
-
-        foreach ($marks as $i => $mark) {
-            if ($onlyPhase !== null && $mark['step_id'] !== $onlyPhase) {
-                continue;
-            }
-            $phase = $timeline[$mark['step_id']];
-            $rows[] = [
-                $customer['id'],
-                $customer['label'],
-                $customer['observer'],
-                $i + 1,
-                $stepNames[$mark['step_id']] ?? '',
-                format_datetime($phase['start']),
-                $phase['skipped'] ? '' : format_datetime($phase['end']),
-                whole_seconds($phase['duration']),
-                $phase['skipped'] ? _t('Common.YES_LOWER', 'áno') : '',
-            ];
+        // Arrival-only records have no phases, they have their own export.
+        if ($customer['arrival_only'] && $measure !== 'arrival') {
+            continue;
         }
 
-        if ($customer['arrival_only']) {
-            $rows[] = [
-                $customer['id'], $customer['label'], $customer['observer'], 1,
-                _t('Export.ARRIVAL', 'Príchod'), format_datetime($customer['arrived_at']), '', '', '',
-            ];
+        $values = export_values($customer, $questions);
+        $row = array_map(fn($key) => $values[$key] ?? '', array_keys($columns));
+        if ($onlyValues && $row[0] === '') {
+            continue;
         }
-
-        if ($customer['left_at'] !== null && !$customer['single_phase_id'] && $onlyPhase === null) {
-            $rows[] = [
-                $customer['id'], $customer['label'], $customer['observer'], count($marks) + 1,
-                _t('Export.DEPARTURE', 'Odchod'), format_datetime($customer['left_at']), '', '', '',
-            ];
-        }
+        $rows[] = $row;
     }
 
     return $rows;

@@ -33,8 +33,7 @@ if (in_array($measure, ['', 'whole'], true)) {
 }
 
 $exportParams = ['day' => $day, 'measure' => $measure, 'sep' => $separator];
-$customersCsvUrl = 'export.php?' . http_build_query(['type' => 'customers'] + $exportParams);
-$eventsCsvUrl = 'export.php?' . http_build_query(['type' => 'events'] + $exportParams);
+$exportColumns = export_columns($measure);
 
 $pageTitle = _t('Nav.RECORDS', 'Záznamy');
 $activeTab = 'records.php';

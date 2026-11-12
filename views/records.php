@@ -8,8 +8,8 @@
 /** @var array $questions */
 /** @var array $rows */
 /** @var array $summary [name => list of durations] */
-/** @var string $customersCsvUrl */
-/** @var string $eventsCsvUrl */
+/** @var array $exportParams day, measure and separator for the export form */
+/** @var array $exportColumns [key => header] offered in the export */
 
 require __DIR__ . '/header.php';
 ?>
@@ -53,15 +53,29 @@ require __DIR__ . '/header.php';
             </label>
         </form>
 
-        <div class="btn-group">
-            <a class="btn btn-primary" href="<?= e($customersCsvUrl) ?>">
+        <details class="export-menu">
+            <summary class="btn btn-primary">
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3 3-3M3 13h10"/></svg>
-                <?= _t('Records.EXPORT_CUSTOMERS', 'CSV – zákazníci') ?>
-            </a>
-            <a class="btn" href="<?= e($eventsCsvUrl) ?>" title="<?= e(_t('Records.EXPORT_EVENTS_HINT', 'Jeden riadok na každú fázu s presnými časmi')) ?>">
-                <?= _t('Records.EXPORT_EVENTS', 'CSV – udalosti') ?>
-            </a>
-        </div>
+                <?= _t('Records.EXPORT', 'Export CSV') ?>
+            </summary>
+
+            <form class="export-panel" method="get" action="export.php" data-download>
+                <?php foreach ($exportParams as $name => $value): ?>
+                    <input type="hidden" name="<?= $name ?>" value="<?= e($value) ?>">
+                <?php endforeach ?>
+
+                <span class="field-label"><?= _t('Records.EXPORT_COLUMNS', 'Stĺpce') ?></span>
+                <?php foreach ($exportColumns as $key => $header): ?>
+                    <label class="check">
+                        <input type="checkbox" name="cols[]" value="<?= e($key) ?>" checked>
+                        <?= e($header) ?>
+                    </label>
+                <?php endforeach ?>
+
+                <p class="export-hint"><?= _t('Records.EXPORT_SINGLE_HINT', 'Jeden stĺpec sa stiahne ako zoznam hodnôt pod sebou, bez hlavičky.') ?></p>
+                <button class="btn btn-primary"><?= _t('Records.DOWNLOAD', 'Stiahnuť') ?></button>
+            </form>
+        </details>
     </div>
 </div>
 
@@ -194,7 +208,7 @@ require __DIR__ . '/header.php';
 <?php endif ?>
 
 <p class="hint">
-    <?= _t('Records.HINT', 'Export „zákazníci“ obsahuje jeden riadok na zákazníka s trvaním fáz v sekundách. Export „udalosti“ obsahuje presné časy začiatku a konca každej fázy. Oba zahŕňajú aj práve sledovaných zákazníkov a riadia sa zvoleným dňom a meraním. Fázy s hviezdičkou boli odstránené v nastavení.') ?>
+    <?= _t('Records.HINT', 'Export obsahuje jeden riadok na zákazníka s vybranými stĺpcami (trvanie fáz v sekundách) a riadi sa zvoleným dňom a meraním. Zahŕňa aj práve sledovaných zákazníkov. Fázy s hviezdičkou boli odstránené v nastavení.') ?>
 </p>
 
 <?php require __DIR__ . '/footer.php'; ?>

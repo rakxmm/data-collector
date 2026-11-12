@@ -43,6 +43,11 @@ document.addEventListener('submit', (event) => {
     return;
   }
 
+  // A download leaves the page as it is, so it can be sent again.
+  if (form.hasAttribute('data-download')) {
+    return;
+  }
+
   // Ignore a second tap while the page is still loading.
   if (form.dataset.sent) {
     event.preventDefault();
