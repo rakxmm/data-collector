@@ -24,15 +24,15 @@ function export_columns(string $measure): array
 }
 
 // [column key => value] for one customer, see export_columns().
-function export_values(array $customer, array $questions, string $decimalMark): array
+function export_values(array $customer, array $questions): array
 {
     $values = [
         'number' => $customer['id'],
         'arrival' => format_time($customer['arrived_at']),
-        'total' => decimal_seconds(total_duration($customer), $decimalMark),
+        'total' => decimal_seconds(total_duration($customer)),
     ];
     foreach (get_timeline($customer, get_marks($customer['id'])) as $stepId => $phase) {
-        $values["phase-$stepId"] = decimal_seconds($phase['duration'], $decimalMark);
+        $values["phase-$stepId"] = decimal_seconds($phase['duration']);
     }
     $answers = get_answers($customer['id']);
     foreach ($questions as $question) {
@@ -43,8 +43,8 @@ function export_values(array $customer, array $questions, string $decimalMark): 
 
 // One row per customer, filtered like the records table. $keys picks columns, [] = all.
 // A single column is exported as a plain list of values: no header and no empty rows.
-// Durations are seconds with two decimals, written with $decimalMark.
-function export_csv_rows(string $day, string $measure, array $keys = [], string $decimalMark = '.'): array
+// Durations are seconds with two decimals and a decimal point.
+function export_csv_rows(string $day, string $measure, array $keys = []): array
 {
     $available = export_columns($measure);
     $columns = array_intersect_key($available, array_flip($keys)) ?: $available;
@@ -59,7 +59,7 @@ function export_csv_rows(string $day, string $measure, array $keys = [], string 
             continue;
         }
 
-        $values = export_values($customer, $questions, $decimalMark);
+        $values = export_values($customer, $questions);
         $row = array_map(fn($key) => $values[$key] ?? '', array_keys($columns));
         if ($onlyValues && $row[0] === '') {
             continue;

@@ -52,7 +52,7 @@ data.rakxmm.dev {
   The **Measured** filter shows only whole visits, arrivals, or every record with a chosen phase
   (measured alone or as part of the whole visit).
 - **Export CSV** follows the chosen day and filter: one row per customer with the columns you tick –
-  number, phase durations in seconds with two decimals (decimal comma for the Excel separator), total time
+  number, phase durations in seconds with two decimals and a decimal point, total time
   (whole visits) and answers; with arrivals only the number
   and arrival time. A single ticked column downloads as a plain list of values without a header.
   The file name says what is inside, e.g. `data-collector-cakanie-v-rade-2026-11-12.csv`.

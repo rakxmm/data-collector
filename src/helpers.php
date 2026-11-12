@@ -96,10 +96,10 @@ function format_duration(?float $seconds): string
     return sprintf('%02d:%02d', $minutes, $secs);
 }
 
-// 125.4567 -> "125,46" with a decimal comma (Excel) or "125.46" with a decimal point.
-function decimal_seconds(?float $seconds, string $decimalMark): string
+// 125.4567 -> "125.46"
+function decimal_seconds(?float $seconds): string
 {
-    return $seconds === null ? '' : number_format($seconds, 2, $decimalMark, '');
+    return $seconds === null ? '' : number_format($seconds, 2, '.', '');
 }
 
 function format_time(float $timestamp): string
