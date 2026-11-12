@@ -6,7 +6,9 @@ require __DIR__ . '/../src/bootstrap.php';
 $day = requested_day();
 $measure = requested_measure();
 $separator = ($_GET['sep'] ?? '') === 'comma' ? ',' : ';';
-$suffix = $day === '' ? '' : "-$day";
+// e.g. data-collector-zakaznici-cakanie-v-rade-2026-11-12.csv
+$parts = array_filter([slug(measure_label($measure)), $day]);
+$suffix = $parts ? '-' . implode('-', $parts) : '';
 
 if (($_GET['type'] ?? '') === 'events') {
     $name = _t('Export.FILE_EVENTS', 'udalosti');

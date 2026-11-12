@@ -9,10 +9,10 @@ function status_label(string $status): string
     };
 }
 
-// One row per customer, phase durations in seconds.
+// One row per customer, phase durations in seconds. Same rows and phase columns as the records table.
 function customers_csv_rows(string $day, string $measure = ''): array
 {
-    $phases = get_steps_for_export('phase');
+    $phases = phases_for_measure($measure);
     $questions = get_steps_for_export('question');
     $seconds = _t('Export.SECONDS', '(s)');
 
@@ -73,9 +73,10 @@ function customers_csv_rows(string $day, string $measure = ''): array
     return $rows;
 }
 
-// One row per phase with exact start and end times.
+// One row per phase with exact start and end times. Filtered by a phase, only that phase is listed.
 function events_csv_rows(string $day, string $measure = ''): array
 {
+    $onlyPhase = ctype_digit($measure) ? (int) $measure : null;
     $stepNames = get_step_names();
     $rows = [[
         _t('Export.NUMBER', 'Č.'),
@@ -94,6 +95,9 @@ function events_csv_rows(string $day, string $measure = ''): array
         $timeline = get_timeline($customer, $marks);
 
         foreach ($marks as $i => $mark) {
+            if ($onlyPhase !== null && $mark['step_id'] !== $onlyPhase) {
+                continue;
+            }
             $phase = $timeline[$mark['step_id']];
             $rows[] = [
                 $customer['id'],
@@ -115,7 +119,7 @@ function events_csv_rows(string $day, string $measure = ''): array
             ];
         }
 
-        if ($customer['left_at'] !== null && !$customer['single_phase_id']) {
+        if ($customer['left_at'] !== null && !$customer['single_phase_id'] && $onlyPhase === null) {
             $rows[] = [
                 $customer['id'], $customer['label'], $customer['observer'], count($marks) + 1,
                 _t('Export.DEPARTURE', 'Odchod'), format_datetime($customer['left_at']), '', '', '',

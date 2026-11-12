@@ -42,6 +42,28 @@ function get_steps_for_export(string $type): array
     )->fetchAll();
 }
 
+// Phase columns worth showing for a measure filter (see filter_by_measure()), the others would stay empty.
+function phases_for_measure(string $measure): array
+{
+    $phases = get_steps_for_export('phase');
+    return match (true) {
+        $measure === 'arrival' => [],
+        ctype_digit($measure) => array_values(array_filter($phases, fn($phase) => (string) $phase['id'] === $measure)),
+        default => $phases,
+    };
+}
+
+// Name of a measure filter, '' for everything.
+function measure_label(string $measure): string
+{
+    return match (true) {
+        $measure === '' => '',
+        $measure === 'whole' => _t('Measure.WHOLE_VISIT', 'celý priebeh'),
+        $measure === 'arrival' => _t('Measure.ARRIVAL_ONLY', 'len príchod'),
+        default => get_step((int) $measure)['name'] ?? '',
+    };
+}
+
 function next_position(string $type): int
 {
     return query('SELECT COALESCE(MAX(position), -1) + 1 FROM steps WHERE type = ?', [$type])->fetchColumn();

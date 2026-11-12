@@ -50,7 +50,8 @@ data.rakxmm.dev {
   (e.g. counter: ordered, not ordered, buffet).
 - **Records** shows average times and exports CSV (one row per customer, or one row per phase).
   The **Measured** filter shows only whole visits, arrivals, or every record with a chosen phase
-  (measured alone or as part of the whole visit).
+  (measured alone or as part of the whole visit). Both CSV exports follow the chosen day and filter,
+  and the file name says which, e.g. `data-collector-zakaznici-cakanie-v-rade-2026-11-12.csv`.
 
 ## Version
 

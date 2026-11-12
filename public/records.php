@@ -8,12 +8,7 @@ $separator = ($_GET['sep'] ?? '') === 'comma' ? 'comma' : 'semicolon';
 
 $days = get_days();
 $measuredPhases = get_steps_for_export('phase');
-// Phase columns that would stay empty for the chosen measure are left out.
-$phases = match (true) {
-    $measure === 'arrival' => [],
-    ctype_digit($measure) => array_values(array_filter($measuredPhases, fn($phase) => (string) $phase['id'] === $measure)),
-    default => $measuredPhases,
-};
+$phases = phases_for_measure($measure);
 $questions = get_steps_for_export('question');
 
 $rows = [];

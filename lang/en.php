@@ -96,7 +96,7 @@ return [
     'Records.LOST_HINT' => 'Lost sight, no departure time',
     'Records.DELETE' => 'Delete record',
     'Records.DELETE_CONFIRM' => 'Delete record #{id}? This cannot be undone.',
-    'Records.HINT' => 'The “customers” export has one row per customer with phase durations in seconds. The “events” export has the exact start and end of every phase. Both include customers still being tracked. Phases marked with an asterisk were removed in settings.',
+    'Records.HINT' => 'The “customers” export has one row per customer with phase durations in seconds. The “events” export has the exact start and end of every phase. Both include customers still being tracked and follow the chosen day and measure filter. Phases marked with an asterisk were removed in settings.',
 
     'Settings.TITLE' => 'Settings',
     'Settings.SUBTITLE' => 'Changes apply right away on all devices.',

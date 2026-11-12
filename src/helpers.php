@@ -67,6 +67,17 @@ function requested_measure(): string
     return preg_match('/^(whole|arrival|\d+)$/', $measure) ? $measure : '';
 }
 
+// "Čakanie v rade" -> "cakanie-v-rade", safe for file names.
+function slug(string $text): string
+{
+    $text = strtr(mb_strtolower($text), [
+        'á' => 'a', 'ä' => 'a', 'č' => 'c', 'ď' => 'd', 'é' => 'e', 'ě' => 'e', 'í' => 'i', 'ĺ' => 'l', 'ľ' => 'l',
+        'ň' => 'n', 'ó' => 'o', 'ô' => 'o', 'ö' => 'o', 'ŕ' => 'r', 'ř' => 'r', 'š' => 's', 'ť' => 't', 'ú' => 'u',
+        'ů' => 'u', 'ü' => 'u', 'ý' => 'y', 'ž' => 'z',
+    ]);
+    return trim(preg_replace('/[^a-z0-9]+/', '-', $text), '-');
+}
+
 // 125 -> "02:05", 3725 -> "1:02:05"
 function format_duration(?float $seconds): string
 {

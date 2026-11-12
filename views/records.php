@@ -194,7 +194,7 @@ require __DIR__ . '/header.php';
 <?php endif ?>
 
 <p class="hint">
-    <?= _t('Records.HINT', 'Export „zákazníci“ obsahuje jeden riadok na zákazníka s trvaním fáz v sekundách. Export „udalosti“ obsahuje presné časy začiatku a konca každej fázy. Oba zahŕňajú aj práve sledovaných zákazníkov. Fázy s hviezdičkou boli odstránené v nastavení.') ?>
+    <?= _t('Records.HINT', 'Export „zákazníci“ obsahuje jeden riadok na zákazníka s trvaním fáz v sekundách. Export „udalosti“ obsahuje presné časy začiatku a konca každej fázy. Oba zahŕňajú aj práve sledovaných zákazníkov a riadia sa zvoleným dňom a meraním. Fázy s hviezdičkou boli odstránené v nastavení.') ?>
 </p>
 
 <?php require __DIR__ . '/footer.php'; ?>
