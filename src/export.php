@@ -1,7 +1,7 @@
 <?php
 
 // Columns the export offers for a measure filter, [key => header], in export order.
-// Arrivals only: number and arrival time. Otherwise: number, phase durations in seconds,
+// Arrivals only: number and arrival time. Otherwise: number, phase durations in seconds (two decimals),
 // total time (whole visits only) and answers to the questions.
 function export_columns(string $measure): array
 {
@@ -24,15 +24,15 @@ function export_columns(string $measure): array
 }
 
 // [column key => value] for one customer, see export_columns().
-function export_values(array $customer, array $questions): array
+function export_values(array $customer, array $questions, string $decimalMark): array
 {
     $values = [
         'number' => $customer['id'],
         'arrival' => format_time($customer['arrived_at']),
-        'total' => whole_seconds(total_duration($customer)),
+        'total' => decimal_seconds(total_duration($customer), $decimalMark),
     ];
     foreach (get_timeline($customer, get_marks($customer['id'])) as $stepId => $phase) {
-        $values["phase-$stepId"] = whole_seconds($phase['duration']);
+        $values["phase-$stepId"] = decimal_seconds($phase['duration'], $decimalMark);
     }
     $answers = get_answers($customer['id']);
     foreach ($questions as $question) {
@@ -43,7 +43,8 @@ function export_values(array $customer, array $questions): array
 
 // One row per customer, filtered like the records table. $keys picks columns, [] = all.
 // A single column is exported as a plain list of values: no header and no empty rows.
-function export_csv_rows(string $day, string $measure, array $keys = []): array
+// Durations are seconds with two decimals, written with $decimalMark.
+function export_csv_rows(string $day, string $measure, array $keys = [], string $decimalMark = '.'): array
 {
     $available = export_columns($measure);
     $columns = array_intersect_key($available, array_flip($keys)) ?: $available;
@@ -58,7 +59,7 @@ function export_csv_rows(string $day, string $measure, array $keys = []): array
             continue;
         }
 
-        $values = export_values($customer, $questions);
+        $values = export_values($customer, $questions, $decimalMark);
         $row = array_map(fn($key) => $values[$key] ?? '', array_keys($columns));
         if ($onlyValues && $row[0] === '') {
             continue;
