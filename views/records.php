@@ -56,7 +56,7 @@ require __DIR__ . '/header.php';
         <details class="export-menu">
             <summary class="btn btn-primary">
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3 3-3M3 13h10"/></svg>
-                <?= _t('Records.EXPORT', 'Export CSV') ?>
+                <?= _t('Records.EXPORT', 'Export') ?>
             </summary>
 
             <form class="export-panel" method="get" action="export.php" data-download>
@@ -73,6 +73,12 @@ require __DIR__ . '/header.php';
                 <?php endforeach ?>
 
                 <p class="export-hint"><?= _t('Records.EXPORT_SINGLE_HINT', 'Jeden stĺpec sa stiahne ako zoznam hodnôt pod sebou, bez hlavičky.') ?></p>
+
+                <span class="field-label"><?= _t('Records.EXPORT_FORMAT', 'Formát') ?></span>
+                <div class="export-formats">
+                    <label class="check"><input type="radio" name="format" value="csv" checked> .csv</label>
+                    <label class="check"><input type="radio" name="format" value="txt"> .txt</label>
+                </div>
                 <button class="btn btn-primary"><?= _t('Records.DOWNLOAD', 'Stiahnuť') ?></button>
             </form>
         </details>

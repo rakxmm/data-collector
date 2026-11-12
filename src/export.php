@@ -70,13 +70,17 @@ function export_csv_rows(string $day, string $measure, array $keys = []): array
     return $rows;
 }
 
-function send_csv(string $filename, array $rows, string $separator): never
+// $format 'csv' or 'txt': the same rows, a .txt file is plain text without the BOM Excel needs.
+function send_export(string $name, array $rows, string $separator, string $format): never
 {
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    $isText = $format === 'txt';
+    header('Content-Type: ' . ($isText ? 'text/plain' : 'text/csv') . '; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $name . '.' . ($isText ? 'txt' : 'csv') . '"');
 
     $output = fopen('php://output', 'w');
-    fwrite($output, "\u{FEFF}"); // BOM, so Excel shows diacritics correctly
+    if (!$isText) {
+        fwrite($output, "\u{FEFF}"); // BOM, so Excel shows diacritics correctly
+    }
     foreach ($rows as $row) {
         fputcsv($output, $row, $separator, '"', '');
     }
