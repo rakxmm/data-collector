@@ -1,15 +1,21 @@
 <?php
 
 // Columns the export offers for a measure filter, [key => header], in export order.
-// Arrivals only: number and arrival time. Otherwise: number, phase durations in seconds (two decimals),
-// total time (whole visits only) and answers to the questions.
+// Arrivals only: number, arrival time and seconds since the previous arrival that day.
+// Otherwise: number, phase durations in seconds (two decimals), total time (whole visits only)
+// and answers to the questions.
 function export_columns(string $measure): array
 {
+    $seconds = _t('Export.SECONDS', '(s)');
+
     if ($measure === 'arrival') {
-        return ['number' => _t('Export.NUMBER', 'Č.'), 'arrival' => _t('Export.ARRIVAL', 'Príchod')];
+        return [
+            'number' => _t('Export.NUMBER', 'Č.'),
+            'arrival' => _t('Export.ARRIVAL', 'Príchod'),
+            'gap' => _t('Export.GAP', 'Medzičas') . " $seconds",
+        ];
     }
 
-    $seconds = _t('Export.SECONDS', '(s)');
     $columns = ['number' => _t('Export.NUMBER', 'Č.')];
     foreach (phases_for_measure($measure) as $phase) {
         $columns['phase-' . $phase['id']] = $phase['name'] . " $seconds";
@@ -52,6 +58,7 @@ function export_csv_rows(string $day, string $measure, array $keys = []): array
     $questions = get_steps_for_export('question');
 
     $rows = $onlyValues ? [] : [array_values($columns)];
+    $lastArrival = []; // [day => arrival time], the first arrival of a day has no gap
 
     foreach (get_all_customers($day, $measure) as $customer) {
         // Arrival-only records have no phases, they have their own export.
@@ -60,6 +67,12 @@ function export_csv_rows(string $day, string $measure, array $keys = []): array
         }
 
         $values = export_values($customer, $questions);
+        $arrivalDay = day_of($customer['arrived_at']);
+        $values['gap'] = isset($lastArrival[$arrivalDay])
+            ? decimal_seconds($customer['arrived_at'] - $lastArrival[$arrivalDay])
+            : '';
+        $lastArrival[$arrivalDay] = $customer['arrived_at'];
+
         $row = array_map(fn($key) => $values[$key] ?? '', array_keys($columns));
         if ($onlyValues && $row[0] === '') {
             continue;

@@ -127,6 +127,7 @@ return [
 
     'Export.NUMBER' => 'No.',
     'Export.ARRIVAL' => 'Arrival',
+    'Export.GAP' => 'Time since previous arrival',
     'Export.TOTAL' => 'Total',
     'Export.SECONDS' => '(s)',
 ];

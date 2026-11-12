@@ -53,8 +53,8 @@ data.rakxmm.dev {
   (measured alone or as part of the whole visit).
 - **Export** follows the chosen day and filter: one row per customer with the columns you tick –
   number, phase durations in seconds with two decimals and a decimal point, total time
-  (whole visits) and answers; with arrivals only the number
-  and arrival time. A single ticked column downloads as a plain list of values without a header.
+  (whole visits) and answers; with arrivals only the number, arrival time and seconds since the previous
+  arrival that day (empty for the first arrival of a day). A single ticked column downloads as a plain list of values without a header.
   The file name says what is inside, e.g. `data-collector-cakanie-v-rade-2026-11-12.csv`.
   It can also be downloaded as `.txt` with the same content.
 
